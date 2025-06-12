@@ -1,2 +1,101 @@
-# gh-discussions-scraper
-Quick script to scrape GitHub discussions and save as markdown. 
+# GitHub Discussions Scraper
+
+This script uses the GitHub GraphQL API to fetch discussions from a specified repository and save them as markdown files.
+
+## Features
+
+- Fetch discussions from any public or authorized GitHub repository
+- Filter discussions by category
+- Save discussions including comments as markdown files
+- Custom formatting of discussion content
+- Limit the number of discussions to fetch
+
+## Requirements
+
+- Python 3.6+
+- `requests` library
+- `python-dotenv` library
+
+## Setup
+
+1. Create a GitHub Personal Access Token:
+   - Go to GitHub Settings > Developer settings > Personal access tokens
+   - Generate a new token with the `repo` scope, we recommend limiting to just discussions with read only access
+   - Copy the token. 
+
+2. Create a `.env` file in the same directory as the script:
+   ```
+   GITHUB_TOKEN=your_github_token_here
+   ```
+
+3. Install the required packages:
+   ```bash
+   pip install requests python-dotenv
+   ```
+
+## Usage
+
+Basic usage:
+```bash
+python github_discussions_scraper.py --owner OWNER --repo REPO
+```
+
+With additional options:
+```bash
+python github_discussions_scraper.py --owner OWNER --repo REPO --category CATEGORY_NAME --limit 20 --output-dir ./my_discussions --include-comments
+```
+
+We suggest using venv for your environment
+```bash
+python3 -m venv venc
+source venv/bin/acticate
+pip install -r requirements.txt
+```
+### Arguments
+
+- `--owner`: Repository owner (username or organization) - REQUIRED
+- `--repo`: Repository name - REQUIRED
+- `--category`: Filter discussions by category name
+- `--limit`: Maximum number of discussions to fetch (default: 10)
+- `--output-dir`: Directory to save markdown files (default: './discussions')
+- `--include-comments`: Include discussion comments in the output (by default, comments are excluded)
+
+## Output Format
+
+Each discussion is saved as a markdown file with the following structure:
+
+```markdown
+# Discussion Title
+
+**Author:** [username](https://github.com/username)  
+**Created:** 2023-06-01T12:34:56Z  
+**URL:** https://github.com/owner/repo/discussions/123  
+
+## Discussion
+
+The content of the discussion goes here...
+```
+
+If the `--include-comments` flag is used, comments will also be included:
+
+```markdown
+## Comments
+
+### [commenter](https://github.com/commenter) - 2023-06-01T13:45:12Z
+
+Comment content goes here...
+```
+
+## Example
+
+```bash
+python github_discussions_scraper.py --owner microsoft --repo vscode --limit 5
+```
+
+This will fetch the 5 most recent discussions from the Microsoft VS Code repository and save them as markdown files in the `./discussions` directory.
+
+To include comments:
+
+```bash
+python github_discussions_scraper.py --owner microsoft --repo vscode --limit 5 --include-comments
+```
