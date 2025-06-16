@@ -1,4 +1,8 @@
-# GitHub Discussions Scraper
+# GitHub Discussions & Releases Scraper
+
+This repository contains scripts that use the GitHub APIs to fetch discussions and releases from specified repositories.
+
+## GitHub Discussions Scraper
 
 This script uses the GitHub GraphQL API to fetch discussions from a specified repository and save them as markdown files.
 
@@ -98,4 +102,56 @@ To include comments:
 
 ```bash
 python github_discussions_scraper.py --owner microsoft --repo vscode --limit 5 --include-comments
+```
+
+## GitHub Releases Scraper
+
+This script uses the GitHub REST API to fetch release information from a specified repository and provides version numbers and release dates.
+
+### Features
+
+- Fetch releases from any public or authorized GitHub repository
+- Option to fetch all releases or limit to a specific number
+- Display release information in a formatted table
+- Export data to JSON or CSV formats
+- Filter out prerelease and draft releases (information is included in output)
+
+### Usage
+
+Basic usage:
+```bash
+python github_releases_scraper.py --owner OWNER --repo REPO
+```
+
+With additional options:
+```bash
+python github_releases_scraper.py --owner OWNER --repo REPO --limit 20 --format json --output releases.json
+```
+
+To fetch all releases:
+```bash
+python github_releases_scraper.py --owner OWNER --repo REPO --all
+```
+
+### Arguments
+
+- `--owner`: Repository owner (username or organization) - REQUIRED
+- `--repo`: Repository name - REQUIRED
+- `--limit`: Maximum number of releases to fetch (default: 10)
+- `--all`: Fetch all releases (ignores limit)
+- `--format`: Output format: "table", "json", or "csv" (default: table)
+- `--output`: Output file for JSON or CSV format (default: {owner}_{repo}_releases.{format})
+
+### Example
+
+```bash
+python github_releases_scraper.py --owner microsoft --repo vscode --limit 5
+```
+
+This will fetch the 5 most recent releases from the Microsoft VS Code repository and display them in a table format.
+
+To save all releases as CSV:
+
+```bash
+python github_releases_scraper.py --owner microsoft --repo vscode --all --format csv --output vscode_releases.csv
 ```
