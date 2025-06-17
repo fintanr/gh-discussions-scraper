@@ -5,6 +5,9 @@ GitHub Releases Scraper
 This script uses the GitHub REST API to fetch release information from a specified repository
 and provides version numbers and release dates.
 
+It extracts major.minor version numbers (e.g., v24.1 from v24.1.1) to enable grouping
+of releases by their major.minor version.
+
 Usage:
     python github_releases_scraper.py --owner OWNER --repo REPO [--limit LIMIT] [--all]
 
@@ -103,6 +106,7 @@ def extract_release_info(releases):
         list: List of dictionaries with extracted release information
     """
     release_info = []
+    import re
     
     for release in releases:
         # Extract relevant fields
@@ -115,6 +119,25 @@ def extract_release_info(releases):
             "prerelease": release["prerelease"],
             "draft": release["draft"]
         }
+        
+        # Extract major.minor version
+        tag = info["tag_name"]
+        # Remove leading 'v' or 'V' if present
+        if tag.lower().startswith('v'):
+            tag = tag[1:]
+        
+        # Try to extract major.minor using regex
+        # First, try to find major.minor.patch pattern
+        version_match = re.search(r'(\d+\.\d+)(?:\.\d+)?', tag)
+        if version_match:
+            info["major_minor"] = f"v{version_match.group(1)}"
+        else:
+            # If no match found, check if the tag itself is a major.minor version
+            if re.match(r'^\d+\.\d+$', tag):
+                info["major_minor"] = f"v{tag}"
+            else:
+                # If still no match found, set to None
+                info["major_minor"] = None
         
         # Format dates
         if info["published_at"]:
@@ -135,15 +158,16 @@ def display_releases(releases_info):
         releases_info: List of dictionaries with release information
     """
     # Print header
-    print("\n{:<20} {:<30} {:<12} {:<10} {:<10}".format(
-        "Version", "Name", "Release Date", "Prerelease", "Draft"
+    print("\n{:<20} {:<15} {:<30} {:<12} {:<10} {:<10}".format(
+        "Version", "Major.Minor", "Name", "Release Date", "Prerelease", "Draft"
     ))
-    print("-" * 85)
+    print("-" * 100)
     
     # Print each release
     for release in releases_info:
-        print("{:<20} {:<30} {:<12} {:<10} {:<10}".format(
+        print("{:<20} {:<15} {:<30} {:<12} {:<10} {:<10}".format(
             release["tag_name"],
+            release["major_minor"] if release["major_minor"] else "N/A",
             release["name"][:27] + "..." if len(release["name"]) > 30 else release["name"],
             release["published_date"] if release["published_date"] else "N/A",
             "Yes" if release["prerelease"] else "No",
@@ -172,7 +196,7 @@ def save_as_csv(releases_info, output_file):
         output_file: Path to the output file
     """
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ["tag_name", "name", "published_date", "url", "prerelease", "draft"]
+        fieldnames = ["tag_name", "major_minor", "name", "published_date", "url", "prerelease", "draft"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         
         writer.writeheader()
@@ -180,6 +204,80 @@ def save_as_csv(releases_info, output_file):
             writer.writerow({k: release[k] for k in fieldnames})
     
     return output_file
+
+def test_major_minor_extraction():
+    """
+    Test the major.minor version extraction for various version formats.
+    This is a development function to verify the regex pattern works correctly.
+    """
+    import re
+    
+    test_cases = [
+        # Standard formats
+        ("v1.2.3", "v1.2"),
+        ("1.2.3", "v1.2"),
+        ("v10.20.30", "v10.20"),
+        
+        # Major.minor only (no patch)
+        ("v1.2", "v1.2"),
+        ("1.2", "v1.2"),
+        
+        # Pre-release identifiers
+        ("v1.2.3-beta", "v1.2"),
+        ("1.2.3-alpha.1", "v1.2"),
+        
+        # Build metadata
+        ("v1.2.3+build123", "v1.2"),
+        ("1.2.3+build.456", "v1.2"),
+        
+        # Prefixed versions
+        ("release-v1.2.3", "v1.2"),
+        ("node-v10.15.3", "v10.15"),
+        
+        # Multiple dots
+        ("v1.2.3.4", "v1.2"),
+        
+        # Single number
+        ("v5", None),
+        ("5", None),
+    ]
+    
+    results = []
+    
+    for test_case, expected in test_cases:
+        tag = test_case
+        # Remove leading 'v' or 'V' if present
+        if tag.lower().startswith('v'):
+            tag = tag[1:]
+            
+        # First, try to find major.minor.patch pattern
+        version_match = re.search(r'(\d+\.\d+)(?:\.\d+)?', tag)
+        if version_match:
+            major_minor = f"v{version_match.group(1)}"
+        else:
+            # If no match found, check if the tag itself is a major.minor version
+            if re.match(r'^\d+\.\d+$', tag):
+                major_minor = f"v{tag}"
+            else:
+                # If still no match found, set to None
+                major_minor = None
+                
+        results.append((test_case, major_minor, expected, major_minor == expected))
+    
+    # Print results
+    print("\nMajor.Minor Version Extraction Test")
+    print("=" * 60)
+    print(f"{'Version':<20} {'Extracted':<15} {'Expected':<15} {'Result':<10}")
+    print("-" * 60)
+    
+    for test_case, extracted, expected, passed in results:
+        print(f"{test_case:<20} {extracted if extracted else 'None':<15} {expected if expected else 'None':<15} {'✓' if passed else '✗'}")
+    
+    # Check if all tests passed
+    all_passed = all(r[3] for r in results)
+    print("\n" + ("All tests passed!" if all_passed else "Some tests failed!"))
+    
+    return all_passed
 
 def main():
     """Main function to run the script."""
@@ -191,8 +289,13 @@ def main():
     parser.add_argument("--format", choices=["table", "json", "csv"], default="table", 
                         help="Output format (default: table)")
     parser.add_argument("--output", help="Output file for JSON or CSV format")
+    parser.add_argument("--test", action="store_true", help="Run tests for major.minor version extraction")
     
     args = parser.parse_args()
+    
+    if args.test:
+        test_major_minor_extraction()
+        return
     
     limit_str = "all" if args.all else args.limit
     print(f"Fetching {limit_str} releases from {args.owner}/{args.repo}...")

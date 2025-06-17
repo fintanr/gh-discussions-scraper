@@ -112,6 +112,7 @@ This script uses the GitHub REST API to fetch release information from a specifi
 
 - Fetch releases from any public or authorized GitHub repository
 - Option to fetch all releases or limit to a specific number
+- Extracts major.minor version numbers (e.g., v24.1 from v24.1.1) for easier grouping of releases
 - Display release information in a formatted table
 - Export data to JSON or CSV formats
 - Filter out prerelease and draft releases (information is included in output)
