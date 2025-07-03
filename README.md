@@ -113,6 +113,7 @@ This script uses the GitHub REST API to fetch release information from a specifi
 - Fetch releases from any public or authorized GitHub repository
 - Option to fetch all releases or limit to a specific number
 - Extracts major.minor version numbers (e.g., v24.1 from v24.1.1) for easier grouping of releases
+- **Major releases only**: Option to show only the first release for each major.minor version
 - Display release information in a formatted table
 - Export data to JSON or CSV formats
 - Filter out prerelease and draft releases (information is included in output)
@@ -132,16 +133,26 @@ python github_releases_scraper.py --owner OWNER --repo REPO --limit 20 --format 
 To fetch all releases:
 ```bash
 python github_releases_scraper.py --owner OWNER --repo REPO --all
+# or
+python github_releases_scraper.py --owner OWNER --repo REPO --limit all
+```
+
+To show only major releases (first release for each major.minor version):
+```bash
+python github_releases_scraper.py --owner OWNER --repo REPO --major-only
 ```
 
 ### Arguments
 
 - `--owner`: Repository owner (username or organization) - REQUIRED
 - `--repo`: Repository name - REQUIRED
-- `--limit`: Maximum number of releases to fetch (default: 10)
-- `--all`: Fetch all releases (ignores limit)
+- `--limit`: Maximum number of releases to fetch (default: 10, use "all" for all releases)
+- `--all`: Fetch all releases (same as --limit all)
+- `--major-only`: Only show the first release for each major.minor version
 - `--format`: Output format: "table", "json", or "csv" (default: table)
 - `--output`: Output file for JSON or CSV format (default: {owner}_{repo}_releases.{format})
+- `--overwrite`: Overwrite existing output file if it exists
+- `--test`: Run tests for major.minor version extraction
 
 ### Example
 
@@ -156,3 +167,19 @@ To save all releases as CSV:
 ```bash
 python github_releases_scraper.py --owner microsoft --repo vscode --all --format csv --output vscode_releases.csv
 ```
+
+To show only major releases (useful for seeing the evolution of major.minor versions):
+
+```bash
+python github_releases_scraper.py --owner nodejs --repo node --major-only --limit 20
+```
+
+This will show the first release for each major.minor version (e.g., the first v24.1.x, first v24.0.x, first v23.11.x, etc.)
+
+To overwrite an existing output file:
+
+```bash
+python github_releases_scraper.py --owner microsoft --repo vscode --format json --output vscode.json --overwrite
+```
+
+This will overwrite the existing vscode.json file if it exists, otherwise it will create a new one.

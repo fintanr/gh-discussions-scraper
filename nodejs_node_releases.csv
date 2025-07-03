@@ -1,0 +1,6 @@
+tag_name,major_minor,name,published_date,url,prerelease,draft
+v24.3.0,v24.3,"2025-06-24, Version 24.3.0 (Current), @RafaelGSS",2025-06-24,https://github.com/nodejs/node/releases/tag/v24.3.0,False,False
+v22.17.0,v22.17,"2025-06-24, Version 22.17.0 'Jod' (LTS), @aduh95",2025-06-25,https://github.com/nodejs/node/releases/tag/v22.17.0,False,False
+v20.19.3,v20.19,"2025-06-23, Version 20.19.3 'Iron' (LTS), @marco-ippolito",2025-06-23,https://github.com/nodejs/node/releases/tag/v20.19.3,False,False
+v24.2.0,v24.2,"2025-06-09, Version 24.2.0 (Current), @aduh95",2025-06-09,https://github.com/nodejs/node/releases/tag/v24.2.0,False,False
+v24.1.0,v24.1,"2025-05-21, Version 24.1.0 (Current), @aduh95",2025-05-21,https://github.com/nodejs/node/releases/tag/v24.1.0,False,False

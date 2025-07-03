@@ -6,10 +6,11 @@ This script uses the GitHub REST API to fetch release information from a specifi
 and provides version numbers and release dates.
 
 It extracts major.minor version numbers (e.g., v24.1 from v24.1.1) to enable grouping
-of releases by their major.minor version.
+of releases by their major.minor version. Can also filter to show only major releases
+(the first release for each major.minor version).
 
 Usage:
-    python github_releases_scraper.py --owner OWNER --repo REPO [--limit LIMIT] [--all]
+    python github_releases_scraper.py --owner OWNER --repo REPO [--limit LIMIT] [--all] [--major-only] [--overwrite]
 
 Requirements:
     - requests
@@ -143,12 +144,45 @@ def extract_release_info(releases):
         if info["published_at"]:
             published_date = datetime.fromisoformat(info["published_at"].replace("Z", "+00:00"))
             info["published_date"] = published_date.strftime("%Y-%m-%d")
+            info["published_datetime"] = published_date
         else:
             info["published_date"] = None
+            info["published_datetime"] = None
             
         release_info.append(info)
     
     return release_info
+
+def filter_major_releases(releases_info):
+    """
+    Filter releases to only include the first release for each major.minor version.
+    
+    Args:
+        releases_info: List of dictionaries with release information
+    
+    Returns:
+        list: List of dictionaries with only major releases (first of each major.minor)
+    """
+    # Sort releases by published date (newest first)
+    sorted_releases = sorted(releases_info, 
+                           key=lambda x: x["published_datetime"] if x["published_datetime"] else datetime.min, 
+                           reverse=True)
+    
+    # Track which major.minor versions we've seen
+    seen_major_minor = set()
+    major_releases = []
+    
+    for release in sorted_releases:
+        major_minor = release["major_minor"]
+        if major_minor and major_minor not in seen_major_minor:
+            seen_major_minor.add(major_minor)
+            major_releases.append(release)
+    
+    # Sort the result back by published date (newest first)
+    major_releases.sort(key=lambda x: x["published_datetime"] if x["published_datetime"] else datetime.min, 
+                       reverse=True)
+    
+    return major_releases
 
 def display_releases(releases_info):
     """
@@ -282,13 +316,15 @@ def test_major_minor_extraction():
 def main():
     """Main function to run the script."""
     parser = argparse.ArgumentParser(description="Fetch release information from a GitHub repository")
-    parser.add_argument("--owner", required=True, help="Repository owner (username or organization)")
-    parser.add_argument("--repo", required=True, help="Repository name")
-    parser.add_argument("--limit", type=int, default=10, help="Maximum number of releases to fetch")
-    parser.add_argument("--all", action="store_true", help="Fetch all releases (ignores limit)")
+    parser.add_argument("--owner", help="Repository owner (username or organization)")
+    parser.add_argument("--repo", help="Repository name")
+    parser.add_argument("--limit", default=10, help="Maximum number of releases to fetch (use 'all' for all releases)")
+    parser.add_argument("--all", action="store_true", help="Fetch all releases (same as --limit all)")
+    parser.add_argument("--major-only", action="store_true", help="Only show the first release for each major.minor version")
     parser.add_argument("--format", choices=["table", "json", "csv"], default="table", 
                         help="Output format (default: table)")
     parser.add_argument("--output", help="Output file for JSON or CSV format")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output file if it exists")
     parser.add_argument("--test", action="store_true", help="Run tests for major.minor version extraction")
     
     args = parser.parse_args()
@@ -297,15 +333,53 @@ def main():
         test_major_minor_extraction()
         return
     
-    limit_str = "all" if args.all else args.limit
+    # Check required arguments for non-test mode
+    if not args.owner or not args.repo:
+        parser.error("--owner and --repo are required unless using --test")
+    
+    # Check output file exists before making API calls
+    if args.format != "table":
+        # Determine output filename if not specified
+        if not args.output:
+            suffix = "_major" if args.major_only else ""
+            args.output = f"{args.owner}_{args.repo}_releases{suffix}.{args.format}"
+        
+        # Check if output file exists
+        if os.path.exists(args.output):
+            if not args.overwrite:
+                print(f"Error: Output file '{args.output}' already exists.")
+                print("Use --overwrite to overwrite the existing file, or specify a different output file with --output.")
+                return
+            else:
+                print(f"Warning: Output file '{args.output}' exists and will be overwritten.")
+    
+    # Handle limit parameter
+    fetch_all = args.all or args.limit == "all"
+    if fetch_all:
+        limit = None
+        limit_str = "all"
+    else:
+        try:
+            limit = int(args.limit)
+            limit_str = str(limit)
+        except ValueError:
+            print(f"Error: Invalid limit value '{args.limit}'. Use a number or 'all'.")
+            return
+    
     print(f"Fetching {limit_str} releases from {args.owner}/{args.repo}...")
+    if args.major_only:
+        print("Filtering to show only major releases (first of each major.minor version)...")
     
     try:
         # Fetch releases
-        releases = fetch_releases(args.owner, args.repo, args.limit, args.all)
+        releases = fetch_releases(args.owner, args.repo, limit if limit else 1000, fetch_all)
         
         # Extract relevant information
         releases_info = extract_release_info(releases)
+        
+        # Filter to major releases only if requested
+        if args.major_only:
+            releases_info = filter_major_releases(releases_info)
         
         print(f"Found {len(releases_info)} releases")
         
@@ -313,11 +387,7 @@ def main():
         if args.format == "table":
             display_releases(releases_info)
         else:
-            # Determine output filename if not specified
-            if not args.output:
-                args.output = f"{args.owner}_{args.repo}_releases.{args.format}"
-            
-            # Save to file
+            # Save to file (filename already determined and checked above)
             if args.format == "json":
                 filepath = save_as_json(releases_info, args.output)
             elif args.format == "csv":
