@@ -1,0 +1,14 @@
+[project]
+name = "gh-discussions-scraper"
+version = "0.1.0"
+description = "Scripts for exporting GitHub discussions and release metadata"
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "python-dotenv>=0.15.0",
+    "requests>=2.25.0",
+]
+
+[tool.uv]
+package = false
+required-version = "==0.13.6"

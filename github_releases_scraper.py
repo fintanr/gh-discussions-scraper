@@ -10,7 +10,7 @@ of releases by their major.minor version. Can also filter to show only major rel
 (the first release for each major.minor version).
 
 Usage:
-    python github_releases_scraper.py --owner OWNER --repo REPO [--limit LIMIT] [--all] [--major-only] [--overwrite]
+    uv run github_releases_scraper.py --owner OWNER --repo REPO [--limit LIMIT] [--all] [--major-only] [--overwrite]
 
 Requirements:
     - requests
