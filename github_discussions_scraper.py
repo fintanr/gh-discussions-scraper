@@ -6,7 +6,7 @@ This script uses the GitHub GraphQL API to fetch discussions from a specified re
 and saves them as markdown files.
 
 Usage:
-    python github_discussions_scraper.py --owner OWNER --repo REPO [--category CATEGORY] [--limit LIMIT]
+    uv run github_discussions_scraper.py --owner OWNER --repo REPO [--category CATEGORY] [--limit LIMIT]
 
 Requirements:
     - requests

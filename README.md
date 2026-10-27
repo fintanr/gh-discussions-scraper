@@ -17,8 +17,7 @@ This script uses the GitHub GraphQL API to fetch discussions from a specified re
 ## Requirements
 
 - Python 3.6+
-- `requests` library
-- `python-dotenv` library
+- [uv 0.13.6](https://docs.astral.sh/uv/)
 
 ## Setup
 
@@ -32,28 +31,22 @@ This script uses the GitHub GraphQL API to fetch discussions from a specified re
    GITHUB_TOKEN=your_github_token_here
    ```
 
-3. Install the required packages:
+3. Install the pinned uv version and sync the project environment:
    ```bash
-   pip install requests python-dotenv
+   curl -LsSf https://astral.sh/uv/0.13.6/install.sh | sh
+   uv sync --locked
    ```
 
 ## Usage
 
 Basic usage:
 ```bash
-python github_discussions_scraper.py --owner OWNER --repo REPO
+uv run github_discussions_scraper.py --owner OWNER --repo REPO
 ```
 
 With additional options:
 ```bash
-python github_discussions_scraper.py --owner OWNER --repo REPO --category CATEGORY_NAME --limit 20 --output-dir ./my_discussions --include-comments
-```
-
-We suggest using venv for your environment
-```bash
-python3 -m venv venc
-source venv/bin/acticate
-pip install -r requirements.txt
+uv run github_discussions_scraper.py --owner OWNER --repo REPO --category CATEGORY_NAME --limit 20 --output-dir ./my_discussions --include-comments
 ```
 ### Arguments
 
@@ -93,7 +86,7 @@ Comment content goes here...
 ## Example
 
 ```bash
-python github_discussions_scraper.py --owner microsoft --repo vscode --limit 5
+uv run github_discussions_scraper.py --owner microsoft --repo vscode --limit 5
 ```
 
 This will fetch the 5 most recent discussions from the Microsoft VS Code repository and save them as markdown files in the `./discussions` directory.
@@ -101,7 +94,7 @@ This will fetch the 5 most recent discussions from the Microsoft VS Code reposit
 To include comments:
 
 ```bash
-python github_discussions_scraper.py --owner microsoft --repo vscode --limit 5 --include-comments
+uv run github_discussions_scraper.py --owner microsoft --repo vscode --limit 5 --include-comments
 ```
 
 ## GitHub Releases Scraper
@@ -122,24 +115,24 @@ This script uses the GitHub REST API to fetch release information from a specifi
 
 Basic usage:
 ```bash
-python github_releases_scraper.py --owner OWNER --repo REPO
+uv run github_releases_scraper.py --owner OWNER --repo REPO
 ```
 
 With additional options:
 ```bash
-python github_releases_scraper.py --owner OWNER --repo REPO --limit 20 --format json --output releases.json
+uv run github_releases_scraper.py --owner OWNER --repo REPO --limit 20 --format json --output releases.json
 ```
 
 To fetch all releases:
 ```bash
-python github_releases_scraper.py --owner OWNER --repo REPO --all
+uv run github_releases_scraper.py --owner OWNER --repo REPO --all
 # or
-python github_releases_scraper.py --owner OWNER --repo REPO --limit all
+uv run github_releases_scraper.py --owner OWNER --repo REPO --limit all
 ```
 
 To show only major releases (first release for each major.minor version):
 ```bash
-python github_releases_scraper.py --owner OWNER --repo REPO --major-only
+uv run github_releases_scraper.py --owner OWNER --repo REPO --major-only
 ```
 
 ### Arguments
@@ -157,7 +150,7 @@ python github_releases_scraper.py --owner OWNER --repo REPO --major-only
 ### Example
 
 ```bash
-python github_releases_scraper.py --owner microsoft --repo vscode --limit 5
+uv run github_releases_scraper.py --owner microsoft --repo vscode --limit 5
 ```
 
 This will fetch the 5 most recent releases from the Microsoft VS Code repository and display them in a table format.
@@ -165,13 +158,13 @@ This will fetch the 5 most recent releases from the Microsoft VS Code repository
 To save all releases as CSV:
 
 ```bash
-python github_releases_scraper.py --owner microsoft --repo vscode --all --format csv --output vscode_releases.csv
+uv run github_releases_scraper.py --owner microsoft --repo vscode --all --format csv --output vscode_releases.csv
 ```
 
 To show only major releases (useful for seeing the evolution of major.minor versions):
 
 ```bash
-python github_releases_scraper.py --owner nodejs --repo node --major-only --limit 20
+uv run github_releases_scraper.py --owner nodejs --repo node --major-only --limit 20
 ```
 
 This will show the first release for each major.minor version (e.g., the first v24.1.x, first v24.0.x, first v23.11.x, etc.)
@@ -179,7 +172,7 @@ This will show the first release for each major.minor version (e.g., the first v
 To overwrite an existing output file:
 
 ```bash
-python github_releases_scraper.py --owner microsoft --repo vscode --format json --output vscode.json --overwrite
+uv run github_releases_scraper.py --owner microsoft --repo vscode --format json --output vscode.json --overwrite
 ```
 
 This will overwrite the existing vscode.json file if it exists, otherwise it will create a new one.
